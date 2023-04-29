@@ -1,0 +1,13 @@
+---
+### Config file for the simulation
+# Engine Parameters
+ThrustLevel: 15000 # [N]
+ChamberPressure: 30e5 # [Pa]
+ExpansionRatio: 10
+Fuel: [Ethanol, H2O]
+FuelMassFraction: [0.8, 0.2]
+Oxidizer: [LOX]
+OxidizerMassFraction: [1.0]
+
+# Determine these values using PropSelect.py
+L*: 1.5 # [m]
