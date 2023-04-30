@@ -18,6 +18,17 @@ def genCEAObj(fuel, fuel_mass_fraction, oxidizer, oxidizer_mass_fraction):
     cea = CEA(propName='', fuelName=Fuel, oxName=Oxidizer, units="metric")
     return cea
 
+def genCEAfromConfig(path_to_config):
+    with open(path_to_config) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+
+    fuel = config['Fuel']
+    fuel_mass_fraction = config['FuelMassFraction']
+    oxidizer = config['Oxidizer']
+    oxidizer_mass_fraction = config['OxidizerMassFraction']
+
+    return genCEAObj(fuel, fuel_mass_fraction, oxidizer, oxidizer_mass_fraction)
+
 if __name__ == '__main__':
     with open('../config.yaml') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
