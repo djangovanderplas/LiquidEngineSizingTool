@@ -1,4 +1,5 @@
-from PropellantSelection.PropSelect import check_characteristic_length
+from InitialSizing import engine_sizer
 
-config = 'config.yaml'
-check_characteristic_length(config)
+
+test_engine = engine_sizer.Engine('config.yaml')
+print(test_engine.isp)
