@@ -1,5 +1,6 @@
 # Author: Django van der Plas
 # This file contains the functions to select a propellant and to check the characteristic length of the propellant
+# TODO: The ISP in this file is rather funky and is not behaving like it should.
 import yaml
 import os.path
 import pandas as pd
@@ -7,9 +8,18 @@ import warnings
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import Propellant
+import sys
+sys.path.append('../')
+from GeneralTools import propellant
 matplotlib.use('Qt5Agg')
 
+def select_pressure_expansion_ratio(max_altitude_pressure, chamber_pressure):
+    if max_altitude_pressure > 0.9e5:
+        return chamber_pressure/ max_altitude_pressure
+    elif max_altitude_pressure < 0.01e5:
+        return 50
+    else:
+        return 2/3*(1.01325e5-max_altitude_pressure)/max_altitude_pressure
 
 def check_characteristic_length(path_to_config: str) -> None:
     """
@@ -83,19 +93,21 @@ def plot_OF_Temperature(path_to_config: str, start: float = 1, stop: float = 2, 
     oxidizer = config['Oxidizer']
     oxidizer_mass_fraction = config['OxidizerMassFraction']
     chamber_pressure = float(config['ChamberPressure'])
-    expansion_ratio = float(config['ExpansionRatio'])
+    exit_pressure = float(config['DesignExitPressure'])
+    pressure_ratio = chamber_pressure/exit_pressure
+    print(pressure_ratio)
 
     # Generate CEA object
-    cea = Propellant.genCEAObj(fuel, fuel_mass_fraction, oxidizer, oxidizer_mass_fraction)
+    cea = propellant.genCEAObj(fuel, fuel_mass_fraction, oxidizer, oxidizer_mass_fraction)
 
     # Generate data
     mixture_ratios = np.arange(start, stop, 0.01)
-    specific_impulses_vacuum = [cea.get_Isp(Pc=chamber_pressure, MR=mr, eps=expansion_ratio) for mr in mixture_ratios]
-    specific_impulses_ambient = [cea.estimate_Ambient_Isp(Pc=chamber_pressure, MR=mr, eps=expansion_ratio,
+    specific_impulses_vacuum = [cea.get_Isp(Pc=chamber_pressure, MR=mr, eps=pressure_ratio) for mr in mixture_ratios]
+    specific_impulses_ambient = [cea.estimate_Ambient_Isp(Pc=chamber_pressure, MR=mr, eps=pressure_ratio,
                                                           Pamb=1.01325e5)[0] for mr in mixture_ratios]
     CombustionTemperatures = [cea.get_Tcomb(Pc=chamber_pressure, MR=mr) for mr in mixture_ratios]
     ThroatTemperatures = [cea.get_Temperatures(Pc=chamber_pressure, MR=mr,
-                                               eps=expansion_ratio)[1] for mr in mixture_ratios]
+                                               eps=pressure_ratio)[1] for mr in mixture_ratios]
 
     # Find optimal O/F and corresponding values
     maxIspIndex = np.argmax(specific_impulses_vacuum)
@@ -132,4 +144,4 @@ def plot_OF_Temperature(path_to_config: str, start: float = 1, stop: float = 2, 
 if __name__ == '__main__':
     path_to_config = os.path.join(os.path.dirname(__file__), '../config.yaml')
     check_characteristic_length(path_to_config)
-    plot_OF_Temperature(path_to_config)
+    plot_OF_Temperature(path_to_config, mode='Amb')
