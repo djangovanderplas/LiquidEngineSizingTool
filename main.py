@@ -1,5 +1,5 @@
-from InitialSizing import engine_sizer
+from InitialSizing import EngineSizer
 
 
-test_engine = engine_sizer.Engine('config.yaml')
+test_engine = EngineSizer.Engine('config.yaml')
 print(test_engine.isp)

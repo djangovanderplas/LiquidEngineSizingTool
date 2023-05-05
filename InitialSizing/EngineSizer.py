@@ -5,6 +5,7 @@ import numpy as np
 
 sys.path.append('../')
 from GeneralTools import propellant
+import NozzleSizer
 
 # Define constants
 gas_constant = 8314.46261815324
@@ -47,6 +48,13 @@ class Engine:
         self.isp = None
         self.throat_area = None
         self.exit_area = None
+        self.chamber_volume = None
+        self.chamber_length = None
+        self.chamber_diameter = None
+        self.chamber_area = None
+        self.exit_diameter = None
+        self.throat_diameter = None
+        self.nozzle = None
 
         # Size the engine
         self.size_engine()
@@ -96,13 +104,39 @@ class Engine:
         self.mass_flow_rate = self.thrust / self.exit_velocity
         self.isp = self.exit_velocity / g0
 
-        # Calculate nozzle throat area
+        # Calculate nozzle throat area and diameter
         self.throat_area = self.mass_flow_rate / self.chamber_pressure * np.sqrt(
             self.combustion_temperature * gas_constant / self.gamma) * \
                            (1 + (self.gamma - 1) / 2) ** ((self.gamma + 1) / (2 * (self.gamma - 1)))
 
+        self.throat_diameter = np.sqrt(4 / np.pi * self.throat_area)
+
+        # Calculate chamber volume
+        self.chamber_volume = self.Lstar * self.throat_area
+
         # Calculate exit area
         self.exit_area = self.throat_area * self.area_ratio
+        self.exit_diameter = np.sqrt(4 / np.pi * self.exit_area)
+
+    def initial_size_geometry(self, nozzle_type='bell'):
+        # Calculate chamber area and diameter
+        self.chamber_area = self.throat_area * (8.0 * self.throat_diameter ** -0.6 + 1.25) # Emperically determined, mildly sus
+        # https://static1.squarespace.com/static/5c639f2e11f78440d05623e3/t/5c6b9076e2c48352e13fa8ab/1550553213416/LCCLS+Rocket+Engine+Sizing+compressed.pdf
+        self.chamber_diameter = np.sqrt(4 / np.pi * self.chamber_area)
+
+        # Calculate chamber length
+        self.chamber_length = self.chamber_volume / self.chamber_area
+
+        # Size nozzle
+        match nozzle_type:
+            case 'bell':
+                pass
+            case 'conical':
+                self.nozzle = NozzleSizer.ConicalNozzle(self.exit_diameter, self.throat_diameter,
+                                                        conical_half_angle=15, nozzle_arc_scalar=1)
+            case 'parabolic':
+                pass
+
 
 
 if __name__ == '__main__':

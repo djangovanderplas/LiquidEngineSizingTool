@@ -5,12 +5,13 @@ import yaml
 import os.path
 import pandas as pd
 import warnings
-import matplotlib
+
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
 sys.path.append('../')
 from GeneralTools import propellant
+import matplotlib
 matplotlib.use('Qt5Agg')
 
 def select_pressure_expansion_ratio(max_altitude_pressure, chamber_pressure):
