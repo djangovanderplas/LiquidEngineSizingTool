@@ -1,4 +1,5 @@
 # Author: Django van der Plas
+# This file contains a class that sizes an engine based on the input parameters
 import sys
 import yaml
 import numpy as np

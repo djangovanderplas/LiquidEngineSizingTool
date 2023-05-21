@@ -1,3 +1,6 @@
+# Author: Django van der Plas
+# This file contains a function to interpolate the empirical bell nozzle parameters by Rao
+
 import pandas as pd
 import numpy as np
 import scipy.interpolate as interp

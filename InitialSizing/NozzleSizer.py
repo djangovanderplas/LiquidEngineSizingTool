@@ -1,3 +1,5 @@
+# Authors: ravi4ram & Django van der Plas
+# This file contains classes that host different nozzle types
 import numpy as np
 import matplotlib.pyplot as plt
 import BellNozzleParameters
