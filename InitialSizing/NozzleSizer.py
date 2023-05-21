@@ -2,6 +2,7 @@
 # This file contains classes that host different nozzle types
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import BellNozzleParameters
 
 
@@ -81,7 +82,7 @@ class ConicalNozzle:
         self.y_nozzle = slope * (self.x_nozzle - self.x_throat_exit[-1]) + self.y_throat_exit[-1]
         self.neg_y_nozzle = -self.y_nozzle
 
-    def plotNozzle(self, ax):
+    def plotNozzle2D(self, ax):
         ax.set_aspect('equal')
 
         # throat entrance
@@ -89,7 +90,7 @@ class ConicalNozzle:
         ax.plot(self.x_throat_entrant, self.neg_y_throat_entrant, linewidth=2.5, color='green')
 
         # throat inlet point
-        ax.plot(self.x_throat_entrant[0], 0, '+')
+        ax.plot(self.x_throat_exit[0], 0, '+', label='Throat')
 
         # throat exit
         ax.plot(self.x_throat_exit, self.y_throat_exit, linewidth=2.5, color='red', label='Throat Exit')
@@ -98,6 +99,29 @@ class ConicalNozzle:
         # bell
         ax.plot(self.x_nozzle, self.y_nozzle, linewidth=2.5, color='blue', label='Bell')
         ax.plot(self.x_nozzle, self.neg_y_nozzle, linewidth=2.5, color='blue')
+
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_title('2D Nozzle')
+        ax.legend()
+
+    def plotNozzle3D(self, ax):
+        ax.set_aspect('equal')
+
+        x_list = np.concatenate((self.x_throat_entrant[::-1], self.x_throat_exit, self.x_nozzle))
+        y_list = np.concatenate((self.y_throat_entrant[::-1], self.y_throat_exit, self.y_nozzle))
+
+        Theta = np.linspace(0, 2.1 * np.pi, 1000)
+        X, Theta = np.meshgrid(x_list, Theta)
+        Y = y_list * np.cos(Theta)
+        Z = y_list * np.sin(Theta)
+
+        ax.plot_surface(X, Y, Z, cmap='viridis')
+
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
+        ax.set_title('3D Nozzle')
 
 
 class BellNozzle:
@@ -219,7 +243,7 @@ class BellNozzle:
         # Add a negative version of the bell
         self.neg_y_nozzle = -self.y_nozzle
 
-    def plotNozzle(self, ax):
+    def plotNozzle2D(self, ax):
         ax.set_aspect('equal')
 
         # throat entrance
@@ -227,7 +251,7 @@ class BellNozzle:
         ax.plot(self.x_throat_entrant, self.neg_y_throat_entrant, linewidth=2.5, color='green')
 
         # throat inlet point
-        ax.plot(self.x_throat_entrant[0], 0, '+')
+        ax.plot(self.x_throat_exit[0], 0, '+', label='Throat')
 
         # throat exit
         ax.plot(self.x_throat_exit, self.y_throat_exit, linewidth=2.5, color='red', label='Throat Exit')
@@ -237,13 +261,40 @@ class BellNozzle:
         ax.plot(self.x_nozzle, self.y_nozzle, linewidth=2.5, color='blue', label='Bell')
         ax.plot(self.x_nozzle, self.neg_y_nozzle, linewidth=2.5, color='blue')
 
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_title('2D Nozzle')
+        ax.legend()
+
+
+
+    def plotNozzle3D(self, ax):
+        ax.set_aspect('equal')
+
+        x_list = np.concatenate((self.x_throat_entrant[::-1], self.x_throat_exit, self.x_nozzle))
+        y_list = np.concatenate((self.y_throat_entrant[::-1], self.y_throat_exit, self.y_nozzle))
+
+        Theta = np.linspace(0, 2.1 * np.pi, 1000)
+        X, Theta = np.meshgrid(x_list, Theta)
+        Y = y_list * np.cos(Theta)
+        Z = y_list * np.sin(Theta)
+
+        ax.plot_surface(X, Y, Z, cmap='viridis')
+
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
+        ax.set_title('3D Nozzle')
+
+
 
 if __name__ == '__main__':
     nozzle = BellNozzle(10, 0.2, length_percentage=0.8, nozzle_arc_scalar=1.5, entrance_angle=135)
-    # nozzle = ConicalNozzle(4, 0.1, length_percentage=1, conical_half_angle=15, nozzle_arc_scalar=1.5,
-    # entrance_angle=135)
+    #nozzle = ConicalNozzle(4, 0.1, length_percentage=1, conical_half_angle=15, nozzle_arc_scalar=1.5,entrance_angle=135)
 
     fig = plt.figure(figsize=(12, 9))
-    ax1 = fig.add_subplot()
-    nozzle.plotNozzle(ax1)
+    ax1 = fig.add_subplot(1, 2, 1)
+    ax2 = fig.add_subplot(1, 2, 2, projection='3d')
+    nozzle.plotNozzle2D(ax1)
+    nozzle.plotNozzle3D(ax2)
     plt.show()
