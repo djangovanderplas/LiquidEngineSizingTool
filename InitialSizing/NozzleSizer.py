@@ -13,27 +13,33 @@ class ConicalNozzle:
     Class that hosts a conical nozzle
     """
 
-    def __init__(self, exit_diameter: float, throat_diameter: float, conical_half_angle: float = 15,
-                 nozzle_arc_scalar: float = 1.5) -> object:
+    def __init__(self, expansion_ratio: float, throat_radius: float, length_percentage=1, conical_half_angle: float = 15,
+                 nozzle_arc_scalar: float = 1.5, entrance_angle: float = 135) -> object:
         """
         Instantiate a conical nozzle object
-        :param exit_diameter: exit diameter of the nozzle [m]
-        :param throat_diameter: throat diameter of the nozzle [m]
+        :param expansion_ratio: Area expansion ratio
+        :param throat_radius: Radius of the throat
         :param conical_half_angle: (half) angle of the conical nozzle [deg]
-        :param nozzle_arc_scalar: Parameter that scales the circular arc radius (R in Huzel and Huang)
+        :param nozzle_arc_scalar: Parameter that scales the circular arc radius (R in Huzel and Huang),
+        ranges from 0.5 to 1.5
         """
-        self.exit_radius = exit_diameter / 2
-        self.throat_radius = throat_diameter / 2
+        self.expansion_ratio = expansion_ratio
+        self.throat_radius = throat_radius
+        self.throat_area = np.pi * self.throat_radius ** 2
+        self.exit_area = self.expansion_ratio * self.throat_area
+        self.exit_radius = np.sqrt(4 / np.pi * self.exit_area)
         self.conical_half_angle = conical_half_angle
         self.nozzle_arc_scalar = nozzle_arc_scalar
+        self.entrance_angle = entrance_angle
+        self.length_percentage = length_percentage
         self.nozzle_arc_radius = None
         self.contraction_ratio = None
         self.nozzle_length = None
-        self.nozzle_correction_factor = None
+        self.nozzle_efficiency = None
 
         self.size_nozzle()
 
-    def size_nozzle(self) -> object:
+    def size_nozzle(self, interval=100) -> object:
         """
         Size the nozzle based on the parameters in the class
         :rtype: object
@@ -42,18 +48,55 @@ class ConicalNozzle:
         self.contraction_ratio = self.exit_radius ** 2 / self.throat_radius ** 2
         self.nozzle_length = (self.throat_radius * (np.sqrt(self.contraction_ratio) - 1) +
                               self.nozzle_arc_radius * (1 / np.cos(np.deg2rad(self.conical_half_angle)) - 1)) / \
-                             np.tan(np.deg2rad(self.conical_half_angle))
-        self.nozzle_correction_factor = 1 / 2 * (1 + np.cos(np.deg2rad(self.conical_half_angle)))
+                             np.tan(np.deg2rad(self.conical_half_angle)) * self.length_percentage
+        self.nozzle_efficiency = 1 / 2 * (1 + np.cos(np.deg2rad(self.conical_half_angle)))
+
+        # Throat entrant section
+        entrant_angles = np.linspace(np.deg2rad(-self.entrance_angle), np.deg2rad(-90), interval)
+        self.xe = self.nozzle_arc_scalar * self.throat_radius * np.cos(entrant_angles)
+        self.ye = self.nozzle_arc_scalar * self.throat_radius * np.sin(entrant_angles) + 2.5 * self.throat_radius
+        self.nye = -self.ye
+
+        # Throat exit section
+        exit_angles = np.linspace(np.deg2rad(-90), np.deg2rad(self.conical_half_angle-90), interval)
+        self.xe2 = self.nozzle_arc_scalar * self.throat_radius * np.cos(exit_angles)
+        self.xe2 = self.xe2 - self.xe2[0]
+        self.ye2 = self.nozzle_arc_scalar * self.throat_radius * np.sin(exit_angles) + 2.5 * self.throat_radius
+        self.nye2 = -self.ye2
+
+        # Nozzle section
+        slope = np.tan(np.deg2rad(self.conical_half_angle))
+        self.x_nozzle = np.linspace(self.xe2[-1], self.nozzle_length, interval)
+        self.y_nozzle = slope * (self.x_nozzle - self.xe2[-1]) + self.ye2[-1]
+        self.ny_nozzle = -self.y_nozzle
+
+    def plotNozzle(self, ax):
+        ax.set_aspect('equal')
+
+        # throat entrance
+        ax.plot(self.xe, self.ye, linewidth=2.5, color='green', label='Throat Entrance')
+        ax.plot(self.xe, self.nye, linewidth=2.5, color='green')
+
+        # throat inlet point
+        ax.plot(self.xe[0], 0, '+')
+
+        # throat exit
+        ax.plot(self.xe2, self.ye2, linewidth=2.5, color='red', label='Throat Exit')
+        ax.plot(self.xe2, self.nye2, linewidth=2.5, color='red')
+
+        # bell
+        ax.plot(self.x_nozzle, self.y_nozzle, linewidth=2.5, color='blue', label='Bell')
+        ax.plot(self.x_nozzle, self.ny_nozzle, linewidth=2.5, color='blue')
 
 
 class BellNozzle:
     """
-    Thrust optimised parabolic bell nozzle
+    Parabolic approximation of the bell nozzle
     based on http://www.aspirespace.org.uk/downloads/Thrust%20optimised%20parabolic%20nozzle.pdf
     and code from https://github.com/ravi4ram/Bell-Nozzle/blob/master/bell_nozzle.py#L137.
     """
 
-    def __init__(self, expansion_ratio: float, throat_radius: float, length_percentage: float = 0.8,
+    def __init__(self, expansion_ratio: float, throat_radius: float, length_percentage: float = 0.8, nozzle_arc_scalar: float =1.5,
                  entrance_angle: float = 135) -> object:
         """
         Initialises the bell nozzle
@@ -65,6 +108,7 @@ class BellNozzle:
         At 85% a nozzle efficiency of 99% is reached, getting to 100% yields only 0.2% more efficiency
         Below 70% the nozzle efficiency suffers
         Most common value is 80%
+        :param nozzle_arc_scalar: Scalar of the radius of the entrance. Should be 1.5 in a standard bell nozzle
         :param entrance_angle: Entrance angle of the nozzle (typical is 135 degrees)
         """
         self.ny_bell = None
@@ -83,6 +127,7 @@ class BellNozzle:
         self.throat_radius = throat_radius
         self.entrance_angle = entrance_angle
         self.length_percentage = length_percentage
+        self.nozzle_arc_scalar = nozzle_arc_scalar
 
         if length_percentage > 1 or length_percentage < 0.6:
             raise ValueError("Length percentage should be between 0.6 and 1, standard 0.8")
@@ -108,9 +153,10 @@ class BellNozzle:
                                                        self.throat_radius) / np.tan(np.deg2rad(15))
         # Throat entrant section
         # Constructed using a circle
-        entrant_angles = np.linspace(np.deg2rad(-self.entrance_angle), np.deg2rad(-90), interval)  # -135 to -90 degrees
-        self.xe = 1.5 * self.throat_radius * np.cos(entrant_angles)
-        self.ye = 1.5 * self.throat_radius * np.sin(entrant_angles) + 2.5 * self.throat_radius
+        entrant_angles = np.linspace(np.deg2rad(-90), np.deg2rad(-self.entrance_angle), interval)  # -135 to -90 degrees
+        self.xe = self.nozzle_arc_scalar * self.throat_radius * np.cos(-entrant_angles)
+        # self.ye = 2.5* self.throat_radius + self.nozzle_arc_scalar * self.throat_radius * np.sin(entrant_angles)
+        self.ye = self.nozzle_arc_scalar * self.throat_radius * np.sin(entrant_angles) + self.throat_radius * (self.nozzle_arc_scalar + 1)
 
         # Add negative version
         self.nye = -self.ye
@@ -181,7 +227,8 @@ class BellNozzle:
 
 
 if __name__ == '__main__':
-    nozzle = BellNozzle(4, 0.2, length_percentage=0.8, entrance_angle=135)
+    #nozzle = BellNozzle(10, 0.2, length_percentage=0.8, nozzle_arc_scalar=1.5, entrance_angle=135)
+    nozzle = ConicalNozzle(4, 0.1, length_percentage=1, conical_half_angle=15, nozzle_arc_scalar=1.5, entrance_angle=135)
 
     fig = plt.figure(figsize=(12, 9))
     ax1 = fig.add_subplot()
