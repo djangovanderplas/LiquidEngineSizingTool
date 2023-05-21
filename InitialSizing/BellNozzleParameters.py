@@ -26,6 +26,7 @@ def getBellParameters(expansion_ratio: float, length_percentage: float) -> (floa
     :param length_percentage:
     :return: theta_n, theta_e
     """
+    length_percentage = length_percentage * 100
     expansion_ratio_interp, length_percentage_interp = np.meshgrid(expansion_ratio, length_percentage)
     theta_n_interp, theta_e_interp = Interpolate(expansion_ratio_interp, length_percentage_interp)
     return theta_n_interp[0, 0], theta_e_interp[0, 0]

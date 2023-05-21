@@ -11,7 +11,6 @@ import NozzleSizer
 gas_constant = 8314.46261815324
 g0 = 9.81
 
-
 class Engine:
     """
     Class that hosts an engine
