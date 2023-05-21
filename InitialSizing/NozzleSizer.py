@@ -13,8 +13,8 @@ class ConicalNozzle:
     Class that hosts a conical nozzle
     """
 
-    def __init__(self, expansion_ratio: float, throat_radius: float, length_percentage=1, conical_half_angle: float = 15,
-                 nozzle_arc_scalar: float = 1.5, entrance_angle: float = 135) -> object:
+    def __init__(self, expansion_ratio: float, throat_radius: float, length_percentage=1,
+                 conical_half_angle: float = 15, nozzle_arc_scalar: float = 1.5, entrance_angle: float = 135) -> object:
         """
         Instantiate a conical nozzle object
         :param expansion_ratio: Area expansion ratio
@@ -36,6 +36,15 @@ class ConicalNozzle:
         self.contraction_ratio = None
         self.nozzle_length = None
         self.nozzle_efficiency = None
+        self.neg_y_nozzle = None
+        self.y_nozzle = None
+        self.x_nozzle = None
+        self.neg_y_throat_exit = None
+        self.y_throat_exit = None
+        self.x_throat_exit = None
+        self.neg_y_throat_entrant = None
+        self.y_throat_entrant = None
+        self.x_throat_entrant = None
 
         self.size_nozzle()
 
@@ -53,40 +62,42 @@ class ConicalNozzle:
 
         # Throat entrant section
         entrant_angles = np.linspace(np.deg2rad(-self.entrance_angle), np.deg2rad(-90), interval)
-        self.xe = self.nozzle_arc_scalar * self.throat_radius * np.cos(entrant_angles)
-        self.ye = self.nozzle_arc_scalar * self.throat_radius * np.sin(entrant_angles) + 2.5 * self.throat_radius
-        self.nye = -self.ye
+        self.x_throat_entrant = self.nozzle_arc_scalar * self.throat_radius * np.cos(entrant_angles)
+        self.y_throat_entrant = self.nozzle_arc_scalar * self.throat_radius * np.sin(entrant_angles) \
+                                + 2.5 * self.throat_radius
+        self.neg_y_throat_entrant = -self.y_throat_entrant
 
         # Throat exit section
         exit_angles = np.linspace(np.deg2rad(-90), np.deg2rad(self.conical_half_angle-90), interval)
-        self.xe2 = self.nozzle_arc_scalar * self.throat_radius * np.cos(exit_angles)
-        self.xe2 = self.xe2 - self.xe2[0]
-        self.ye2 = self.nozzle_arc_scalar * self.throat_radius * np.sin(exit_angles) + 2.5 * self.throat_radius
-        self.nye2 = -self.ye2
+        self.x_throat_exit = self.nozzle_arc_scalar * self.throat_radius * np.cos(exit_angles)
+        self.x_throat_exit = self.x_throat_exit - self.x_throat_exit[0]
+        self.y_throat_exit = self.nozzle_arc_scalar * self.throat_radius * np.sin(exit_angles) \
+                             + 2.5 * self.throat_radius
+        self.neg_y_throat_exit = -self.y_throat_exit
 
         # Nozzle section
         slope = np.tan(np.deg2rad(self.conical_half_angle))
-        self.x_nozzle = np.linspace(self.xe2[-1], self.nozzle_length, interval)
-        self.y_nozzle = slope * (self.x_nozzle - self.xe2[-1]) + self.ye2[-1]
-        self.ny_nozzle = -self.y_nozzle
+        self.x_nozzle = np.linspace(self.x_throat_exit[-1], self.nozzle_length, interval)
+        self.y_nozzle = slope * (self.x_nozzle - self.x_throat_exit[-1]) + self.y_throat_exit[-1]
+        self.neg_y_nozzle = -self.y_nozzle
 
     def plotNozzle(self, ax):
         ax.set_aspect('equal')
 
         # throat entrance
-        ax.plot(self.xe, self.ye, linewidth=2.5, color='green', label='Throat Entrance')
-        ax.plot(self.xe, self.nye, linewidth=2.5, color='green')
+        ax.plot(self.x_throat_entrant, self.y_throat_entrant, linewidth=2.5, color='green', label='Throat Entrance')
+        ax.plot(self.x_throat_entrant, self.neg_y_throat_entrant, linewidth=2.5, color='green')
 
         # throat inlet point
-        ax.plot(self.xe[0], 0, '+')
+        ax.plot(self.x_throat_entrant[0], 0, '+')
 
         # throat exit
-        ax.plot(self.xe2, self.ye2, linewidth=2.5, color='red', label='Throat Exit')
-        ax.plot(self.xe2, self.nye2, linewidth=2.5, color='red')
+        ax.plot(self.x_throat_exit, self.y_throat_exit, linewidth=2.5, color='red', label='Throat Exit')
+        ax.plot(self.x_throat_exit, self.neg_y_throat_exit, linewidth=2.5, color='red')
 
         # bell
         ax.plot(self.x_nozzle, self.y_nozzle, linewidth=2.5, color='blue', label='Bell')
-        ax.plot(self.x_nozzle, self.ny_nozzle, linewidth=2.5, color='blue')
+        ax.plot(self.x_nozzle, self.neg_y_nozzle, linewidth=2.5, color='blue')
 
 
 class BellNozzle:
@@ -96,8 +107,8 @@ class BellNozzle:
     and code from https://github.com/ravi4ram/Bell-Nozzle/blob/master/bell_nozzle.py#L137.
     """
 
-    def __init__(self, expansion_ratio: float, throat_radius: float, length_percentage: float = 0.8, nozzle_arc_scalar: float =1.5,
-                 entrance_angle: float = 135) -> object:
+    def __init__(self, expansion_ratio: float, throat_radius: float, length_percentage: float = 0.8,
+                 nozzle_arc_scalar: float = 1.5, entrance_angle: float = 135) -> object:
         """
         Initialises the bell nozzle
         :rtype: object
@@ -111,23 +122,23 @@ class BellNozzle:
         :param nozzle_arc_scalar: Scalar of the radius of the entrance. Should be 1.5 in a standard bell nozzle
         :param entrance_angle: Entrance angle of the nozzle (typical is 135 degrees)
         """
-        self.ny_bell = None
-        self.y_bell = None
-        self.x_bell = None
-        self.nye2 = None
-        self.ye2 = None
-        self.xe2 = None
-        self.ye = None
-        self.nye = None
-        self.xe = None
-        self.nozzle_length = None
-        self.theta_e = None
-        self.theta_n = None
         self.expansion_ratio = expansion_ratio
         self.throat_radius = throat_radius
         self.entrance_angle = entrance_angle
         self.length_percentage = length_percentage
         self.nozzle_arc_scalar = nozzle_arc_scalar
+        self.neg_y_nozzle = None
+        self.y_nozzle = None
+        self.x_nozzle = None
+        self.neg_y_throat_exit = None
+        self.y_throat_exit = None
+        self.x_throat_exit = None
+        self.y_throat_entrant = None
+        self.neg_y_throat_entrant = None
+        self.x_throat_entrant = None
+        self.nozzle_length = None
+        self.theta_e = None
+        self.theta_n = None
 
         if length_percentage > 1 or length_percentage < 0.6:
             raise ValueError("Length percentage should be between 0.6 and 1, standard 0.8")
@@ -154,46 +165,47 @@ class BellNozzle:
         # Throat entrant section
         # Constructed using a circle
         entrant_angles = np.linspace(np.deg2rad(-90), np.deg2rad(-self.entrance_angle), interval)  # -135 to -90 degrees
-        self.xe = self.nozzle_arc_scalar * self.throat_radius * np.cos(-entrant_angles)
+        self.x_throat_entrant = self.nozzle_arc_scalar * self.throat_radius * np.cos(-entrant_angles)
         # self.ye = 2.5* self.throat_radius + self.nozzle_arc_scalar * self.throat_radius * np.sin(entrant_angles)
-        self.ye = self.nozzle_arc_scalar * self.throat_radius * np.sin(entrant_angles) + self.throat_radius * (self.nozzle_arc_scalar + 1)
+        self.y_throat_entrant = self.nozzle_arc_scalar * self.throat_radius * np.sin(entrant_angles) + \
+                                self.throat_radius * (self.nozzle_arc_scalar + 1)
 
         # Add negative version
-        self.nye = -self.ye
+        self.neg_y_throat_entrant = -self.y_throat_entrant
 
         # Throat exit section (from throat into nozzle)
         # Constructed using a circle
         exit_angles = np.linspace(np.deg2rad(-90), np.deg2rad(self.theta_n - 90), interval)  # -90 to theta_n-90
-        self.xe2 = 0.382 * self.throat_radius * np.cos(exit_angles)
-        self.xe2 = self.xe2 - self.xe2[0]
-        self.ye2 = 0.382 * self.throat_radius * np.sin(exit_angles) + 1.382 * self.throat_radius
+        self.x_throat_exit = 0.382 * self.throat_radius * np.cos(exit_angles)
+        self.x_throat_exit = self.x_throat_exit - self.x_throat_exit[0]
+        self.y_throat_exit = 0.382 * self.throat_radius * np.sin(exit_angles) + 1.382 * self.throat_radius
 
         # Add negative version
-        self.nye2 = -self.ye2
+        self.neg_y_throat_exit = -self.y_throat_exit
 
         # Bell section
         # Drawn using a Quadratic Bézier curve
-        # Start point of quadratic Bézier curve
+        # Start point of quadratic Bézier curve, N
         Nx = 0.382 * self.throat_radius * np.cos(np.deg2rad(self.theta_n - 90))
         Ny = 0.382 * self.throat_radius * np.sin(np.deg2rad(self.theta_n - 90)) + 1.382 * self.throat_radius
 
-        # Exit point of quadratic bezier curve
+        # Exit point of quadratic bezier curve, E
         Ex = self.nozzle_length
         Ey = np.sqrt(self.expansion_ratio) * self.throat_radius
 
         # Gradient of the entrance and exit of the nozzle
-        # gradient m1,m2 - [Eqn. 8]
-        m1 = np.tan(np.deg2rad(self.theta_n))
-        m2 = np.tan(np.deg2rad(self.theta_e))
+        # gradient slope1, slope2
+        slope1 = np.tan(np.deg2rad(self.theta_n))
+        slope2 = np.tan(np.deg2rad(self.theta_e))
 
         # Lines used to determine Q
-        C1 = Ny - m1 * Nx
-        C2 = Ey - m2 * Ex
+        line1 = Ny - slope1 * Nx
+        line2 = Ey - slope2 * Ex
 
         # Bezier point
-        # Found as intercept between C1 and C2
-        Qx = (C2 - C1) / (m1 - m2)
-        Qy = (m1 * C2 - m2 * C1) / (m1 - m2)
+        # Found as intercept between line1 and C2
+        Qx = (line2 - line1) / (slope1 - slope2)
+        Qy = (slope1 * line2 - slope2 * line1) / (slope1 - slope2)
 
         # Quadratic Bézier curve
         # The bell is a quadratic Bézier curve, which has equations:
@@ -201,34 +213,35 @@ class BellNozzle:
         # y(t) = (1 − t)^2 * Ny + 2(1 − t)t * Qy + t^2 * Ey, 0≤t≤1
         coord_list = np.linspace(0, 1, interval)
 
-        self.x_bell = ((1 - coord_list) ** 2) * Nx + 2 * (1 - coord_list) * coord_list * Qx + (coord_list ** 2) * Ex
-        self.y_bell = ((1 - coord_list) ** 2) * Ny + 2 * (1 - coord_list) * coord_list * Qy + (coord_list ** 2) * Ey
+        self.x_nozzle = ((1 - coord_list) ** 2) * Nx + 2 * (1 - coord_list) * coord_list * Qx + (coord_list ** 2) * Ex
+        self.y_nozzle = ((1 - coord_list) ** 2) * Ny + 2 * (1 - coord_list) * coord_list * Qy + (coord_list ** 2) * Ey
 
         # Add a negative version of the bell
-        self.ny_bell = -self.y_bell
+        self.neg_y_nozzle = -self.y_nozzle
 
     def plotNozzle(self, ax):
         ax.set_aspect('equal')
 
         # throat entrance
-        ax.plot(self.xe, self.ye, linewidth=2.5, color='green', label='Throat Entrance')
-        ax.plot(self.xe, self.nye, linewidth=2.5, color='green')
+        ax.plot(self.x_throat_entrant, self.y_throat_entrant, linewidth=2.5, color='green', label='Throat Entrance')
+        ax.plot(self.x_throat_entrant, self.neg_y_throat_entrant, linewidth=2.5, color='green')
 
         # throat inlet point
-        ax.plot(self.xe[0], 0, '+')
+        ax.plot(self.x_throat_entrant[0], 0, '+')
 
         # throat exit
-        ax.plot(self.xe2, self.ye2, linewidth=2.5, color='red', label='Throat Exit')
-        ax.plot(self.xe2, self.nye2, linewidth=2.5, color='red')
+        ax.plot(self.x_throat_exit, self.y_throat_exit, linewidth=2.5, color='red', label='Throat Exit')
+        ax.plot(self.x_throat_exit, self.neg_y_throat_exit, linewidth=2.5, color='red')
 
         # bell
-        ax.plot(self.x_bell, self.y_bell, linewidth=2.5, color='blue', label='Bell')
-        ax.plot(self.x_bell, self.ny_bell, linewidth=2.5, color='blue')
+        ax.plot(self.x_nozzle, self.y_nozzle, linewidth=2.5, color='blue', label='Bell')
+        ax.plot(self.x_nozzle, self.neg_y_nozzle, linewidth=2.5, color='blue')
 
 
 if __name__ == '__main__':
-    #nozzle = BellNozzle(10, 0.2, length_percentage=0.8, nozzle_arc_scalar=1.5, entrance_angle=135)
-    nozzle = ConicalNozzle(4, 0.1, length_percentage=1, conical_half_angle=15, nozzle_arc_scalar=1.5, entrance_angle=135)
+    nozzle = BellNozzle(10, 0.2, length_percentage=0.8, nozzle_arc_scalar=1.5, entrance_angle=135)
+    # nozzle = ConicalNozzle(4, 0.1, length_percentage=1, conical_half_angle=15, nozzle_arc_scalar=1.5,
+    # entrance_angle=135)
 
     fig = plt.figure(figsize=(12, 9))
     ax1 = fig.add_subplot()
