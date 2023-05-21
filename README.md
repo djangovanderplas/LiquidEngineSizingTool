@@ -24,8 +24,8 @@ This phase involves the initial layout of the engine in such a way that all engi
 - [x] Implement initial sizing of engine characteristics
 
 Known values: pressure ratio, mw, gamma, expansion ratio, combustion temperature, throat temperature, exit velocity, mass flow rate, Isp, throat area, exit area
-- [ ] Implement engine geometry
-- [ ] Implement various options for nozzles like bell, parabolic and conical
+- [x] Implement engine geometry
+- [x] Implement various options for nozzles like bell and conical
 - [ ] Calculate engine volume
 - [ ] Calculate combustion chamber dimensions
 
