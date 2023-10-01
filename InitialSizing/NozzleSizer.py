@@ -62,7 +62,7 @@ class ConicalNozzle:
         self.nozzle_efficiency = 1 / 2 * (1 + np.cos(np.deg2rad(self.conical_half_angle)))
 
         # Throat entrant section
-        entrant_angles = np.linspace(np.deg2rad(-self.entrance_angle), np.deg2rad(-90), interval)
+        entrant_angles = np.linspace(np.deg2rad(-90), np.deg2rad(-self.entrance_angle), interval)
         self.x_throat_entrant = self.nozzle_arc_scalar * self.throat_radius * np.cos(entrant_angles)
         self.y_throat_entrant = self.nozzle_arc_scalar * self.throat_radius * np.sin(entrant_angles) \
                                 + 2.5 * self.throat_radius
@@ -82,7 +82,7 @@ class ConicalNozzle:
         self.y_nozzle = slope * (self.x_nozzle - self.x_throat_exit[-1]) + self.y_throat_exit[-1]
         self.neg_y_nozzle = -self.y_nozzle
 
-    def plotNozzle2D(self, ax):
+    def plot2D(self, ax):
         ax.set_aspect('equal')
 
         # throat entrance
@@ -105,7 +105,7 @@ class ConicalNozzle:
         ax.set_title('2D Nozzle')
         ax.legend()
 
-    def plotNozzle3D(self, ax):
+    def plot3D(self, ax):
         ax.set_aspect('equal')
 
         x_list = np.concatenate((self.x_throat_entrant[::-1], self.x_throat_exit, self.x_nozzle))
@@ -188,11 +188,13 @@ class BellNozzle:
                                                        self.throat_radius) / np.tan(np.deg2rad(15))
         # Throat entrant section
         # Constructed using a circle
+
         entrant_angles = np.linspace(np.deg2rad(-90), np.deg2rad(-self.entrance_angle), interval)  # -135 to -90 degrees
         self.x_throat_entrant = self.nozzle_arc_scalar * self.throat_radius * np.cos(-entrant_angles)
         # self.ye = 2.5* self.throat_radius + self.nozzle_arc_scalar * self.throat_radius * np.sin(entrant_angles)
         self.y_throat_entrant = self.nozzle_arc_scalar * self.throat_radius * np.sin(entrant_angles) + \
                                 self.throat_radius * (self.nozzle_arc_scalar + 1)
+        self.entrant_length = self.x_throat_entrant[0] - self.x_throat_entrant[-1]
 
         # Add negative version
         self.neg_y_throat_entrant = -self.y_throat_entrant
@@ -243,7 +245,7 @@ class BellNozzle:
         # Add a negative version of the bell
         self.neg_y_nozzle = -self.y_nozzle
 
-    def plotNozzle2D(self, ax):
+    def plot2D(self, ax):
         ax.set_aspect('equal')
 
         # throat entrance
@@ -268,7 +270,7 @@ class BellNozzle:
 
 
 
-    def plotNozzle3D(self, ax):
+    def plot3D(self, ax):
         ax.set_aspect('equal')
 
         x_list = np.concatenate((self.x_throat_entrant[::-1], self.x_throat_exit, self.x_nozzle))
@@ -289,12 +291,12 @@ class BellNozzle:
 
 
 if __name__ == '__main__':
-    nozzle = BellNozzle(10, 0.2, length_percentage=0.8, nozzle_arc_scalar=1.5, entrance_angle=135)
-    #nozzle = ConicalNozzle(4, 0.1, length_percentage=1, conical_half_angle=15, nozzle_arc_scalar=1.5,entrance_angle=135)
+    #nozzle = BellNozzle(8, 0.2, length_percentage=1.0, nozzle_arc_scalar=1.5, entrance_angle=135)
+    nozzle = ConicalNozzle(4, 0.1, length_percentage=1, conical_half_angle=15, nozzle_arc_scalar=1.5,entrance_angle=135)
 
     fig = plt.figure(figsize=(12, 9))
     ax1 = fig.add_subplot(1, 2, 1)
     ax2 = fig.add_subplot(1, 2, 2, projection='3d')
-    nozzle.plotNozzle2D(ax1)
-    nozzle.plotNozzle3D(ax2)
+    nozzle.plot2D(ax1)
+    nozzle.plot3D(ax2)
     plt.show()

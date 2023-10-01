@@ -1,16 +1,21 @@
 ---
 ### Config file for the simulation
 # Engine Parameters
-Thrust: 15000 # [N]
+Thrust: 200 # [N]
 ChamberPressure: 30e5 # [Pa]
-DesignExitPressure: 25000 # [Pa]
+DesignExitPressure: 0.9e5 # [Pa]
 Fuel: [Ethanol, H2O]
 FuelMassFraction: [0.8, 0.2]
-Oxidizer: [LOX]
+Oxidizer: [N2O]
 OxidizerMassFraction: [1.0]
 
 # Determine these values using PropSelect.py
-L*: 2.75 # [m]
-MixtureRatio: 1.49 # [-]
+L*: 0.5 # [m]
+MixtureRatio: 4.57 # [-]
 
-
+# Nozzle Parameters
+NozzleType: conical # bell or conical
+NozzleArcScalar: 1.5 # [-], default value 1.5
+NozzleEntranceAngle: 135 # [deg], default value 135 deg
+NozzleLengthPercentage: 1 # [-], default value 1 for conical, 0.8 for bell
+NozzleHalfAngle: 15 # [deg], default value 15 deg, only applicable to conical

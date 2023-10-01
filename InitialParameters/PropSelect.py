@@ -51,8 +51,8 @@ def check_characteristic_length(path_to_config: str) -> None:
     if len(fuel_list) < len(fuel):
         warnings.warn(f'PropellantSelectionWarning: Not all fuels in database, please use L* value with care')
 
-    comp_in_ox_list = False
     ox_list = []
+    comp_in_oxlist = False
     for comp in oxidizer:
         if comp in propellant_data['Oxidizer'].values:
             comp_in_oxlist = True
@@ -75,7 +75,7 @@ def check_characteristic_length(path_to_config: str) -> None:
         print(f'Characteristic length range for {fuel} and {oxidizer}: {l_star_min} - {l_star_max} [m]')
 
 
-def plot_OF_Temperature(path_to_config: str, start: float = 1, stop: float = 2, mode='Vac') -> None:
+def plot_OF_Temperature(path_to_config: str, start: float = 1, stop: float = 10, mode='Vac') -> None:
     """
     This function plots the Isp and the combustion temperature vs the mixture ratio.
     :param path_to_config:
@@ -96,7 +96,7 @@ def plot_OF_Temperature(path_to_config: str, start: float = 1, stop: float = 2, 
     chamber_pressure = float(config['ChamberPressure'])
     exit_pressure = float(config['DesignExitPressure'])
     pressure_ratio = chamber_pressure/exit_pressure
-    print(pressure_ratio)
+    print(f"Pressure Ratio: {pressure_ratio}")
 
     # Generate CEA object
     cea = propellant.genCEAObj(fuel, fuel_mass_fraction, oxidizer, oxidizer_mass_fraction)
